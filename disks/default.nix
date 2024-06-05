@@ -9,7 +9,7 @@
   disko = {
     devices = {
       disk = {
-        impermanence = lib.mkIf impermanence {
+        main = lib.mkIf impermanence {
           inherit device;
           type = "disk";
           content = {
@@ -28,13 +28,6 @@
                   type = "filesystem";
                   format = "vfat";
                   mountpoint = "/boot";
-                };
-              };
-              swap = lib.mkIf swap {
-                size = "${swapSize}G";
-                content = {
-                  type = "swap";
-                  resumeDevice = true;
                 };
               };
               root = {
@@ -87,29 +80,7 @@
         };
       };
       zpool = {
-        zroot = lib.mkIf (impermanence == false) {
-          type = "zpool";
-          rootFsOptions = {
-            compression = "zstd";
-            "com.sun:auto-snapshot" = "false";
-          };
-          mountpoint = "/";
-          postCreateHook = "zfs list -t snapshot -H -o name | grep -E '^zroot@blank$' || zfs snapshot zroot@blank";
-
-          datasets = {
-            nix = {
-              type = "zfs_fs";
-              mountpoint = "/nix";
-              options.mountpoint = "legacy";
-            };
-            tmp = {
-              type = "zfs_fs";
-              mountpoint = "/tmp";
-              options.mountpoint = "legacy";
-            };
-          };
-        };
-        zimpermanence = lib.mkIf impermanence {
+        zroot = lib.mkIf impermanence {
           type = "zpool";
           rootFsOptions = {
             canmount = "off";
@@ -134,6 +105,11 @@
             persist-cache = {
               type = "zfs_fs";
               mountpoint = "/persist/cache";
+              options.mountpoint = "legacy";
+            };
+            disks = {
+              type = "zfs_fs";
+              mountpoint = "/disks";
               options.mountpoint = "legacy";
             };
           };
